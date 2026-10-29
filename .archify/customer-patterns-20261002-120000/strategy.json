@@ -1,0 +1,157 @@
+{
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Customer · Strategy",
+    "subtitle": "Diagrama de clases: búsqueda paginada y decisión ante coincidencias",
+    "output": ".archify/customer-patterns-20261002-120000/strategy.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "facade",
+      "type": "backend",
+      "label": "CustomerFacade",
+      "sublabel": "Context",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        200,
+        70
+      ],
+      "tag": "Context"
+    },
+    {
+      "id": "busqueda",
+      "type": "backend",
+      "label": "EstrategiaBusqueda",
+      "sublabel": "buscar(repo, criterio, página)",
+      "pos": [
+        340,
+        100
+      ],
+      "size": [
+        250,
+        70
+      ],
+      "tag": "Strategy"
+    },
+    {
+      "id": "contacto",
+      "type": "backend",
+      "label": "BusquedaPorContacto",
+      "sublabel": "contacto exacto",
+      "pos": [
+        700,
+        40
+      ],
+      "size": [
+        230,
+        70
+      ]
+    },
+    {
+      "id": "nombre",
+      "type": "backend",
+      "label": "BusquedaPorNombre",
+      "sublabel": "nombre sin acentos",
+      "pos": [
+        700,
+        160
+      ],
+      "size": [
+        230,
+        70
+      ]
+    },
+    {
+      "id": "politica",
+      "type": "backend",
+      "label": "PoliticaDuplicados",
+      "sublabel": "decidir(coincidencias, confirmado)",
+      "pos": [
+        340,
+        400
+      ],
+      "size": [
+        270,
+        70
+      ],
+      "tag": "Strategy"
+    },
+    {
+      "id": "alertar",
+      "type": "security",
+      "label": "AlertarSinAutoCrear",
+      "sublabel": "alertar y no crear",
+      "pos": [
+        700,
+        400
+      ],
+      "size": [
+        230,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "facade",
+      "to": "busqueda",
+      "label": "consulta y alta",
+      "variant": "emphasis"
+    },
+    {
+      "from": "busqueda",
+      "to": "contacto",
+      "label": "variante",
+      "variant": "dashed"
+    },
+    {
+      "from": "busqueda",
+      "to": "nombre",
+      "label": "variante",
+      "variant": "dashed"
+    },
+    {
+      "from": "facade",
+      "to": "politica",
+      "label": "decide el alta",
+      "variant": "security"
+    },
+    {
+      "from": "politica",
+      "to": "alertar",
+      "label": "variante",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Búsqueda paginada",
+      "items": [
+        "La Facade elige la variante según el criterio y delega la página.",
+        "Agregar otra variante no cambia la Facade."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "No auto-crear",
+      "items": [
+        "AlertarSinAutoCrear devuelve ALERTAR si hay coincidencias.",
+        "Sólo sin coincidencias y con confirmación devuelve CREAR."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Descartados",
+      "items": [
+        "Template Method: los pasos no comparten un esqueleto variable.",
+        "Command/State/Observer/Iterator no aportan a la decisión ni a la búsqueda."
+      ]
+    }
+  ],
+  "schema_version": 1
+}

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     smtp_from: str = "no-reply@taller.local"
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
+    # Carpeta de archivos subidos (fotos de talleres). Por defecto backend/uploads, fuera del control de versiones.
+    uploads_dir: str | None = None
 
 
 settings = Settings()

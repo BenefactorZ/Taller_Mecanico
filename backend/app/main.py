@@ -8,11 +8,23 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import settings
+from .customers.administracion import router as clientes_admin_router
+from .customers.api import regla_incumplida_handler, router as customers_router
+from .customers.dominio import ReglaIncumplida
 from .database import Base, engine, get_db
 from .email_service import send_reset_code
+from .catalogos import sembrar_status
+from .cuentas_api import router as cuentas_router
+from .migraciones import migrar
 from .models import PasswordResetCode, Role, User
+from .empleados_api import router as empleados_router
+from .permisos import requiere, router as permisos_router, sembrar_permisos, usuario_con_permisos
+from .roles_api import resolver_rol_empleado, router as roles_router, sembrar_roles_sistema
+from .talleres.administracion import router as talleres_admin_router
+from .talleres.api import catalogo as catalogo_router, router as talleres_router
+from .vehiculos.api import router as vehiculos_router
 from .schemas import LoginRequest, RecoveryRequest, ResetPasswordRequest, TokenResponse, UserCreate, UserResponse, VerifyCodeRequest
-from .security import allow_roles, create_access_token, current_user, hash_password, verify_password
+from .security import create_access_token, current_user, hash_password, verify_password
 
 
 app = FastAPI(title="Taller Mecánico - Seguridad")
@@ -31,9 +43,28 @@ app.add_middleware(
 )
 
 
+app.include_router(clientes_admin_router)
+app.include_router(customers_router)
+app.include_router(vehiculos_router)
+app.include_router(cuentas_router)
+app.include_router(roles_router)
+app.include_router(empleados_router)
+app.include_router(permisos_router)
+app.include_router(talleres_router)
+app.include_router(talleres_admin_router)
+app.include_router(catalogo_router)
+app.add_exception_handler(ReglaIncumplida, regla_incumplida_handler)
+
+
 @app.on_event("startup")
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
+    with Session(engine) as db:
+        sembrar_status(db)  # los estatus deben existir antes de agregar las claves foráneas de bin_status
+    migrar(engine)
+    with Session(engine) as db:
+        sembrar_roles_sistema(db)  # requiere las columnas que agrega la migración
+        sembrar_permisos(db)
     if settings.bootstrap_admin_email and settings.bootstrap_admin_password:
         with Session(engine) as db:
             if not db.scalar(select(User).where(User.email == settings.bootstrap_admin_email.lower())):
@@ -46,12 +77,12 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == payload.email.lower()))
     if not user or not user.is_active or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
-    return TokenResponse(access_token=create_access_token(user), user=user)
+    return TokenResponse(access_token=create_access_token(user), user=usuario_con_permisos(user, db))
 
 
 @app.get("/api/auth/me", response_model=UserResponse)
-def me(user: User = Depends(current_user)):
-    return user
+def me(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return usuario_con_permisos(user, db)
 
 
 @app.post("/api/auth/recovery", status_code=status.HTTP_202_ACCEPTED)
@@ -92,8 +123,10 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 
 
 @app.post("/api/users/employees", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_employee(payload: UserCreate, db: Session = Depends(get_db), _: User = Depends(allow_roles(Role.ADMINISTRADOR))):
-    employee = User(full_name=payload.full_name.strip(), email=payload.email.lower(), password_hash=hash_password(payload.password), role=payload.role, branch=payload.branch.strip() if payload.branch else None)
+def create_employee(payload: UserCreate, db: Session = Depends(get_db), _: User = Depends(requiere("empleados.alta"))):
+    # El rol sale de la tabla de roles: uno de empleado de fábrica o uno personalizado activo (role = PERSONALIZADO + role_definition_id)
+    rol, rol_id = resolver_rol_empleado(db, payload.role)
+    employee = User(full_name=payload.full_name.strip(), email=payload.email.lower(), password_hash=hash_password(payload.password), role=rol, role_definition_id=rol_id, branch=payload.branch.strip() if payload.branch else None)
     db.add(employee)
     try:
         db.commit()
@@ -104,26 +137,26 @@ def create_employee(payload: UserCreate, db: Session = Depends(get_db), _: User 
     return employee
 
 
-@app.get("/api/work-orders", dependencies=[Depends(allow_roles(Role.ADMINISTRADOR, Role.RECEPCIONISTA, Role.ASESOR_SERVICIO, Role.TECNICO))])
+@app.get("/api/work-orders", dependencies=[Depends(requiere("ordenes.consultar"))])
 def list_work_orders():
     return {"message": "Acceso autorizado a órdenes de trabajo"}
 
 
-@app.post("/api/receptions", dependencies=[Depends(allow_roles(Role.ADMINISTRADOR, Role.RECEPCIONISTA))])
+@app.post("/api/receptions", dependencies=[Depends(requiere("recepciones.registrar"))])
 def register_reception():
     return {"message": "Recepción registrada"}
 
 
-@app.patch("/api/work-orders/{order_id}/corrections", dependencies=[Depends(allow_roles(Role.ADMINISTRADOR, Role.ASESOR_SERVICIO))])
+@app.patch("/api/work-orders/{order_id}/corrections", dependencies=[Depends(requiere("ordenes.corregir"))])
 def correct_work_order(order_id: int):
     return {"message": f"Orden {order_id} corregida"}
 
 
-@app.post("/api/work-orders/{order_id}/diagnostics", dependencies=[Depends(allow_roles(Role.ADMINISTRADOR, Role.TECNICO))])
+@app.post("/api/work-orders/{order_id}/diagnostics", dependencies=[Depends(requiere("diagnosticos.registrar"))])
 def register_diagnostic(order_id: int):
     return {"message": f"Diagnóstico de la orden {order_id} registrado"}
 
 
-@app.get("/api/notifications", dependencies=[Depends(allow_roles(Role.ADMINISTRADOR, Role.CLIENTE))])
+@app.get("/api/notifications", dependencies=[Depends(requiere("notificaciones.consultar"))])
 def client_notifications():
     return {"message": "Notificaciones disponibles"}

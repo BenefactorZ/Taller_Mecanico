@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "868f88b2-07ca-4724-998d-b89db1d8d6c4",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\consulta-cliente-sequence.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\consulta-cliente-sequence.html",
+  "specification": {
+    "sha256": "882d0557fd590e6e90ab4cc977b7eee832edd3a4816ee0547f2472c341d0c1c1",
+    "bytes": 3838
+  },
+  "artifact": {
+    "sha256": "3f3522bd788ea7522840317bfef8b088a0a482054a43339492c5b5c301163784",
+    "bytes": 756241
+  }
+}

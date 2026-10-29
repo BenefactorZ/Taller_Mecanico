@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "title": "Alta de Customer",
+    "subtitle": "Guardas, decisión tras buscar coincidencias, confirmación, persistencia y auditoría",
+    "output": ".archify/customer-patterns-20261002-120000/alta-cliente-sequence.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "u",
+      "type": "external",
+      "label": "Usuario",
+      "sublabel": "sesión"
+    },
+    {
+      "id": "f",
+      "type": "backend",
+      "label": "Facade",
+      "sublabel": "alta/consulta"
+    },
+    {
+      "id": "c",
+      "type": "security",
+      "label": "Cadena",
+      "sublabel": "pasos del alta"
+    },
+    {
+      "id": "p",
+      "type": "backend",
+      "label": "Política",
+      "sublabel": "Strategy"
+    },
+    {
+      "id": "fa",
+      "type": "backend",
+      "label": "Factory",
+      "sublabel": "Factory Method"
+    },
+    {
+      "id": "cu",
+      "type": "database",
+      "label": "Customer",
+      "sublabel": "repositorio"
+    },
+    {
+      "id": "a",
+      "type": "database",
+      "label": "Auditoría",
+      "sublabel": "registro"
+    }
+  ],
+  "segments": [
+    {
+      "from": 180,
+      "to": 310,
+      "label": "Abrir alta y guardas"
+    },
+    {
+      "from": 345,
+      "to": 515,
+      "label": "Captura y coincidencias"
+    },
+    {
+      "from": 555,
+      "to": 785,
+      "label": "Decisión"
+    },
+    {
+      "from": 820,
+      "to": 1175,
+      "label": "Confirmar, persistir y auditar"
+    }
+  ],
+  "messages": [
+    {
+      "from": "u",
+      "to": "f",
+      "y": 200,
+      "label": "abrir_alta()",
+      "variant": "emphasis"
+    },
+    {
+      "from": "f",
+      "to": "c",
+      "y": 245,
+      "label": "autenticación, autorización y Taller activo",
+      "variant": "security"
+    },
+    {
+      "from": "c",
+      "to": "f",
+      "y": 285,
+      "label": "guardas aprobadas",
+      "variant": "return"
+    },
+    {
+      "from": "u",
+      "to": "f",
+      "y": 385,
+      "label": "AltaCliente(datos)",
+      "variant": "emphasis",
+      "note": "Captura nombre, teléfono y correo"
+    },
+    {
+      "from": "f",
+      "to": "c",
+      "y": 440,
+      "label": "normalizar, validar formato y buscar coincidencias",
+      "variant": "default"
+    },
+    {
+      "from": "c",
+      "to": "f",
+      "y": 485,
+      "label": "coincidencias encontradas",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "p",
+      "y": 595,
+      "label": "decidir(coincidencias, confirmado)",
+      "variant": "security"
+    },
+    {
+      "from": "p",
+      "to": "f",
+      "y": 640,
+      "label": "ALERTAR, PEDIR_CONFIRMACION o CREAR",
+      "variant": "return",
+      "note": "Punto de decisión"
+    },
+    {
+      "from": "f",
+      "to": "u",
+      "y": 700,
+      "label": "alerta: hay coincidencias",
+      "variant": "return",
+      "note": "Termina aquí"
+    },
+    {
+      "from": "f",
+      "to": "u",
+      "y": 745,
+      "label": "pedir confirmación",
+      "variant": "return"
+    },
+    {
+      "from": "u",
+      "to": "f",
+      "y": 855,
+      "label": "AltaCliente(confirmar)",
+      "variant": "emphasis",
+      "note": "Repite cadena y política"
+    },
+    {
+      "from": "f",
+      "to": "fa",
+      "y": 915,
+      "label": "crear(datos, taller)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "fa",
+      "to": "f",
+      "y": 960,
+      "label": "Customer ACTIVO",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "cu",
+      "y": 1010,
+      "label": "guardar(customer)",
+      "variant": "default"
+    },
+    {
+      "from": "cu",
+      "to": "f",
+      "y": 1055,
+      "label": "Customer persistido",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "a",
+      "y": 1105,
+      "label": "registrar(ALTA_CUSTOMER)",
+      "variant": "security"
+    },
+    {
+      "from": "f",
+      "to": "u",
+      "y": 1150,
+      "label": "CREADO: Customer activo",
+      "variant": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Guarda",
+      "items": [
+        "Sin Usuario autenticado, autorizado y Taller activo el flujo termina.",
+        "Se evalúa antes de normalizar, buscar o persistir."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Punto de decisión",
+      "items": [
+        "La política recibe las coincidencias y decide.",
+        "Con coincidencias alerta: nunca crea un segundo Customer."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Resultado",
+      "items": [
+        "Sólo la rama confirmada y sin coincidencias crea, persiste y audita.",
+        "El resultado esperado es un Customer activo."
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "diagram_type": "sequence"
+}

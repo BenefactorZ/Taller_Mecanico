@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5476e041-6fe7-4732-a083-e58c23b1a7f1",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\chain-of-responsibility.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\chain-of-responsibility.html",
+  "specification": {
+    "sha256": "9947a7c532791cc6310fcabe8463ad8b832cfdc2519430d384675065f2dfd451",
+    "bytes": 3628
+  },
+  "artifact": {
+    "sha256": "697f4c80a0099524cdfccdeca2d1ab94e7207078c90718bfaafecaea6a0167b5",
+    "bytes": 754868
+  }
+}

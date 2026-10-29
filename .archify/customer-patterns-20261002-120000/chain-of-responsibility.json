@@ -1,0 +1,175 @@
+{
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Customer · Chain of Responsibility",
+    "subtitle": "Diagrama de clases: pasos del alta encadenados con salida temprana",
+    "output": ".archify/customer-patterns-20261002-120000/chain-of-responsibility.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "base",
+      "type": "backend",
+      "label": "Manejador",
+      "sublabel": "manejar() · enlazar()",
+      "pos": [
+        40,
+        50
+      ],
+      "size": [
+        230,
+        70
+      ],
+      "tag": "Handler"
+    },
+    {
+      "id": "facade",
+      "type": "backend",
+      "label": "CustomerFacade",
+      "sublabel": "alta_cliente()",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "AutenticacionHandler",
+      "sublabel": "usuario autenticado",
+      "pos": [
+        300,
+        260
+      ],
+      "size": [
+        220,
+        70
+      ]
+    },
+    {
+      "id": "autz",
+      "type": "security",
+      "label": "AutorizacionHandler",
+      "sublabel": "rol permitido",
+      "pos": [
+        580,
+        260
+      ],
+      "size": [
+        220,
+        70
+      ]
+    },
+    {
+      "id": "taller",
+      "type": "security",
+      "label": "TallerActivoHandler",
+      "sublabel": "Taller activo",
+      "pos": [
+        860,
+        260
+      ],
+      "size": [
+        220,
+        70
+      ]
+    },
+    {
+      "id": "formato",
+      "type": "backend",
+      "label": "FormatoHandler",
+      "sublabel": "normaliza y valida formato",
+      "pos": [
+        580,
+        430
+      ],
+      "size": [
+        230,
+        70
+      ]
+    },
+    {
+      "id": "coinc",
+      "type": "backend",
+      "label": "CoincidenciasHandler",
+      "sublabel": "anota coincidencias",
+      "pos": [
+        860,
+        430
+      ],
+      "size": [
+        230,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "base",
+      "to": "auth",
+      "label": "5 subclases extienden",
+      "variant": "dashed"
+    },
+    {
+      "from": "facade",
+      "to": "auth",
+      "label": "captura",
+      "variant": "emphasis"
+    },
+    {
+      "from": "auth",
+      "to": "autz",
+      "label": "siguiente",
+      "variant": "security"
+    },
+    {
+      "from": "autz",
+      "to": "taller",
+      "label": "siguiente",
+      "variant": "security"
+    },
+    {
+      "from": "taller",
+      "to": "formato",
+      "label": "siguiente",
+      "variant": "emphasis"
+    },
+    {
+      "from": "formato",
+      "to": "coinc",
+      "label": "siguiente",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Cadena",
+      "items": [
+        "Cada Manejador verifica una condición y delega al siguiente.",
+        "Un incumplimiento lanza ReglaIncumplida y la cadena se corta."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guardas reutilizables",
+      "items": [
+        "Autenticación, autorización y Taller activo también protegen la consulta.",
+        "La Facade arma dos cadenas con las mismas clases."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Por qué este patrón",
+      "items": [
+        "Los pasos del alta son una secuencia fija con salida temprana.",
+        "Agregar un paso no modifica la Facade ni los demás pasos."
+      ]
+    }
+  ],
+  "schema_version": 1
+}

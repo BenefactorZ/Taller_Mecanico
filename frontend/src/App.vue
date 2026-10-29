@@ -1,1 +1,1 @@
-<template><v-app><v-main><router-view /></v-main></v-app></template>
+<template><v-app><router-view /></v-app></template>

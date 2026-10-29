@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "70ecdf43-483d-4f28-bab8-df9b131ae3c7",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\alta-taller.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\alta-taller.html",
+  "specification": {
+    "sha256": "98f6d1f4bc2d9f8cfcf267987f3ca22efd3680059a4287542b1ac33f47c253b5",
+    "bytes": 6051
+  },
+  "artifact": {
+    "sha256": "95d6c052717fba6885911c72a0b49492f429a3fe897784dc0608dbf53ef7233a",
+    "bytes": 763302
+  }
+}

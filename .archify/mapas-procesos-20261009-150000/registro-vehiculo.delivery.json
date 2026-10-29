@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "a395124c-6fce-4ef8-8563-0c0cc698de98",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\registro-vehiculo.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\registro-vehiculo.html",
+  "specification": {
+    "sha256": "8d60e64f0af1cc4eed47184ad0b76c2b78141335cc213c7572b682a2cdf4c5ff",
+    "bytes": 4960
+  },
+  "artifact": {
+    "sha256": "7b0509ee6475b110fbad3984772fe08f990298ffc7aea8c1fc2d56777bf551b8",
+    "bytes": 765549
+  }
+}

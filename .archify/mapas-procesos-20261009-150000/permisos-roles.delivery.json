@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "97a87bde-842d-4a06-b78a-46240a88805a",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\permisos-roles.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\permisos-roles.html",
+  "specification": {
+    "sha256": "7291712e05de58f6f5a54a5f1a6aa5bd3de192214e016a84d04600ecd727ff30",
+    "bytes": 5169
+  },
+  "artifact": {
+    "sha256": "6ab3ccb2fe10ef3973d0414ac11ae2d46a1f590530fcf001c717b7b2c8395e1e",
+    "bytes": 758786
+  }
+}

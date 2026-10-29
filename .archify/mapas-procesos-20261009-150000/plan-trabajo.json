@@ -1,0 +1,259 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Plan de trabajo por fases",
+    "output": ".archify/mapas-procesos-20261009-150000/plan-trabajo.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "security": {
+          "label": "Seguridad"
+        },
+        "backend": {
+          "label": "Lógica de negocio"
+        },
+        "database": {
+          "label": "Borrado lógico"
+        },
+        "frontend": {
+          "label": "Pantalla"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "seguridad",
+      "label": "Seguridad y personal"
+    },
+    {
+      "id": "talleres",
+      "label": "Talleres"
+    },
+    {
+      "id": "clientes",
+      "label": "Clientes"
+    },
+    {
+      "id": "vehiculos",
+      "label": "Vehículos"
+    }
+  ],
+  "phases": [
+    {
+      "id": "cimientos",
+      "label": "Cimientos de seguridad",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "operacion",
+      "label": "Permisos, personal y alta",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "administracion",
+      "label": "Administración",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "f0",
+    "f1",
+    "f2",
+    "f21",
+    "f3",
+    "f4",
+    "f5"
+  ],
+  "nodes": [
+    {
+      "id": "f0",
+      "lane": "seguridad",
+      "col": 0,
+      "type": "security",
+      "label": "0 · Seguridad",
+      "sublabel": "JWT, Argon2, recuperación",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f1",
+      "lane": "seguridad",
+      "col": 1,
+      "type": "backend",
+      "label": "1 · Crear roles",
+      "sublabel": "registro Invitado y roles",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f2",
+      "lane": "seguridad",
+      "col": 2,
+      "type": "database",
+      "label": "2 · Roles",
+      "sublabel": "administrar, borrado lógico",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f21",
+      "lane": "seguridad",
+      "col": 3,
+      "type": "security",
+      "label": "2.1 · Permisos",
+      "sublabel": "17 permisos por petición",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f22",
+      "lane": "seguridad",
+      "col": 4,
+      "type": "frontend",
+      "label": "2.2 · Empleados",
+      "sublabel": "buscar, editar, asignar rol",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f3",
+      "lane": "talleres",
+      "col": 3,
+      "type": "frontend",
+      "label": "3 · Alta de taller",
+      "sublabel": "RFC, foto, código postal",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f6",
+      "lane": "talleres",
+      "col": 5,
+      "type": "frontend",
+      "label": "6 · Talleres",
+      "sublabel": "administración",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f4",
+      "lane": "clientes",
+      "col": 4,
+      "type": "backend",
+      "label": "4 · Clientes",
+      "sublabel": "alta y consulta, patrones",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f5",
+      "lane": "clientes",
+      "col": 5,
+      "type": "backend",
+      "label": "5 · Clientes",
+      "sublabel": "administrar y suspender",
+      "tag": "Hecha",
+      "width": 134
+    },
+    {
+      "id": "f7",
+      "lane": "vehiculos",
+      "col": 5,
+      "type": "frontend",
+      "label": "7 · Vehículos",
+      "sublabel": "registro con VIN y placa",
+      "tag": "Hecha",
+      "width": 134
+    }
+  ],
+  "edges": [
+    {
+      "id": "e01",
+      "from": "f0",
+      "to": "f1",
+      "label": "roles",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e12",
+      "from": "f1",
+      "to": "f2",
+      "label": "borrado lógico",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e221",
+      "from": "f2",
+      "to": "f21",
+      "label": "permisos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2122",
+      "from": "f21",
+      "to": "f22",
+      "label": "empleados.*",
+      "role": "branch"
+    },
+    {
+      "id": "e213",
+      "from": "f21",
+      "to": "f3",
+      "label": "talleres.alta",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e34",
+      "from": "f3",
+      "to": "f4",
+      "label": "el cliente pertenece a un taller",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e45",
+      "from": "f4",
+      "to": "f5",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e36",
+      "from": "f3",
+      "to": "f6",
+      "label": "reutiliza bin_status",
+      "role": "branch"
+    },
+    {
+      "id": "e47",
+      "from": "f4",
+      "to": "f7",
+      "label": "vehículo del cliente",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Estado",
+      "items": [
+        "Fases 0 a 7 hechas y probadas de punta a punta",
+        "Pendiente: editar y eliminar vehículos"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Criterios globales",
+      "items": [
+        "Nada se ejecuta sin sesión y permiso, ni por URL ni por API",
+        "Nada se borra físicamente: se marca con bin_status",
+        "Validaciones en frontend (TypeScript) y backend (FastAPI)"
+      ]
+    }
+  ]
+}

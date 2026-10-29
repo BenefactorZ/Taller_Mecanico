@@ -1,0 +1,159 @@
+{
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Customer · Factory Method",
+    "subtitle": "Diagrama de clases: creación controlada de Customer",
+    "output": ".archify/customer-patterns-20261002-120000/factory-method.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "politica",
+      "type": "backend",
+      "label": "PoliticaDuplicados",
+      "sublabel": "decidir() → CREAR",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "facade",
+      "type": "backend",
+      "label": "CustomerFacade",
+      "sublabel": "alta_cliente()",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "creator",
+      "type": "backend",
+      "label": "CustomerCreator",
+      "sublabel": "crear() · _nuevo_customer()",
+      "pos": [
+        360,
+        230
+      ],
+      "size": [
+        230,
+        70
+      ],
+      "tag": "Creator"
+    },
+    {
+      "id": "concreto",
+      "type": "backend",
+      "label": "CustomerActivoCreator",
+      "sublabel": "_nuevo_customer()",
+      "pos": [
+        360,
+        400
+      ],
+      "size": [
+        230,
+        70
+      ],
+      "tag": "ConcreteCreator"
+    },
+    {
+      "id": "customer",
+      "type": "database",
+      "label": "Customer",
+      "sublabel": "estado = ACTIVO",
+      "pos": [
+        720,
+        400
+      ],
+      "size": [
+        200,
+        70
+      ],
+      "tag": "Product"
+    },
+    {
+      "id": "taller",
+      "type": "external",
+      "label": "Taller",
+      "sublabel": "activo",
+      "pos": [
+        720,
+        230
+      ],
+      "size": [
+        200,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "facade",
+      "to": "politica",
+      "label": "consulta la decisión",
+      "variant": "security"
+    },
+    {
+      "from": "facade",
+      "to": "creator",
+      "label": "crear() sólo si CREAR",
+      "variant": "emphasis"
+    },
+    {
+      "from": "concreto",
+      "to": "creator",
+      "label": "extiende",
+      "variant": "dashed"
+    },
+    {
+      "from": "concreto",
+      "to": "customer",
+      "label": "construye",
+      "variant": "emphasis"
+    },
+    {
+      "from": "customer",
+      "to": "taller",
+      "label": "pertenece a",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Patrón elegido",
+      "items": [
+        "Factory Method: crear() fija el flujo y valida que el Customer nazca ACTIVO.",
+        "La subclase decide cómo se construye en _nuevo_customer()."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Regla de no duplicar",
+      "items": [
+        "La Facade sólo llama a crear() si la política devolvió CREAR.",
+        "Customer no se construye en ningún otro lugar del sistema."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Descartados",
+      "items": [
+        "Builder: sólo hay dos datos mínimos.",
+        "Abstract Factory: no hay familias de objetos.",
+        "Prototype: no se clonan Customer.",
+        "Singleton: no resuelve la regla de no duplicar."
+      ]
+    }
+  ],
+  "schema_version": 1
+}

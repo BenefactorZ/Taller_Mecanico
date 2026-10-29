@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Registro de vehículo",
+    "output": ".archify/mapas-procesos-20261009-150000/registro-vehiculo.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "external": { "label": "Persona" },
+        "frontend": { "label": "Pantalla Vue" },
+        "security": { "label": "Paso del flujo" },
+        "backend": { "label": "Guardado" },
+        "database": { "label": "Base de datos" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "vue", "label": "Pantalla (Vue)" },
+    { "id": "preparar", "label": "API · preparar" },
+    { "id": "guardar", "label": "API · guardar" },
+    { "id": "datos", "label": "Persistencia" }
+  ],
+  "phases": [
+    { "id": "captura", "label": "Captura", "fromCol": 0, "toCol": 2 },
+    { "id": "flujo", "label": "Flujo del registro", "fromCol": 3, "toCol": 4, "variant": "security" },
+    { "id": "resultado", "label": "Resultado", "fromCol": 5, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["persona", "form", "front", "datos", "norm", "dup", "guardar", "relacionar", "activo"],
+  "nodes": [
+    { "id": "persona", "lane": "vue", "col": 0, "type": "external", "label": "Recepción o admin", "sublabel": "vehiculos.registrar", "width": 152 },
+    { "id": "form", "lane": "vue", "col": 1, "type": "frontend", "label": "Formulario", "sublabel": "cliente, datos e imagen", "width": 152 },
+    { "id": "front", "lane": "vue", "col": 2, "type": "frontend", "label": "Validación TypeScript", "sublabel": "VIN, placa y imagen", "width": 152 },
+    { "id": "error", "lane": "vue", "col": 3, "type": "frontend", "label": "Error junto al botón", "sublabel": "404, 409, 413 o 422", "width": 152 },
+    { "id": "activo", "lane": "vue", "col": 5, "type": "frontend", "label": "Vehículo activo", "sublabel": "mensaje junto al botón", "width": 152 },
+    { "id": "datos", "lane": "preparar", "col": 2, "type": "security", "label": "1 · Datos", "sublabel": "cliente en alcance y activo", "width": 152 },
+    { "id": "norm", "lane": "preparar", "col": 3, "type": "security", "label": "2 · Normalizar", "sublabel": "VIN y placa en mayúsculas", "width": 152 },
+    { "id": "dup", "lane": "preparar", "col": 4, "type": "security", "label": "3 · Duplicados", "sublabel": "VIN o placa repetidos", "width": 152 },
+    { "id": "guardar", "lane": "guardar", "col": 4, "type": "backend", "label": "4 · Guardar", "sublabel": "imagen y vehículo", "width": 152 },
+    { "id": "relacionar", "lane": "guardar", "col": 5, "type": "backend", "label": "5 · Relacionar", "sublabel": "cliente, taller y auditoría", "width": 152 },
+    { "id": "img", "lane": "datos", "col": 3, "type": "database", "label": "uploads/vehiculos", "sublabel": "imagen hasta 15 MB", "width": 152 },
+    { "id": "veh", "lane": "datos", "col": 4, "type": "database", "label": "vehiculos", "sublabel": "bin_status = activo", "width": 152 },
+    { "id": "aud", "lane": "datos", "col": 5, "type": "database", "label": "auditoria", "sublabel": "ALTA_VEHICULO", "width": 152 }
+  ],
+  "edges": [
+    { "id": "e-persona", "from": "persona", "to": "form", "variant": "emphasis" },
+    { "id": "e-form", "from": "form", "to": "front", "variant": "emphasis" },
+    { "id": "e-front", "from": "front", "to": "datos", "label": "POST multipart", "variant": "emphasis" },
+    { "id": "e-datos", "from": "datos", "to": "norm", "variant": "emphasis" },
+    { "id": "e-norm", "from": "norm", "to": "dup", "variant": "emphasis" },
+    { "id": "e-dup", "from": "dup", "to": "guardar", "label": "únicos", "variant": "emphasis" },
+    { "id": "e-guardar", "from": "guardar", "to": "relacionar", "variant": "emphasis" },
+    { "id": "e-activo", "from": "relacionar", "to": "activo", "variant": "emphasis", "role": "return" },
+    { "id": "e-datos-err", "from": "datos", "to": "error", "variant": "security", "role": "error" },
+    { "id": "e-norm-err", "from": "norm", "to": "error", "label": "422", "variant": "security", "role": "error" },
+    { "id": "e-dup-err", "from": "dup", "to": "error", "label": "409", "variant": "security", "role": "error" },
+    { "id": "e-img", "from": "guardar", "to": "img", "variant": "dashed", "role": "branch" },
+    { "id": "e-veh", "from": "guardar", "to": "veh", "variant": "dashed", "role": "branch" },
+    { "id": "e-aud", "from": "relacionar", "to": "aud", "variant": "dashed", "role": "branch" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Datos",
+      "items": [
+        "VIN de 17 caracteres (sin I, O ni Q) y placa de 5 a 7",
+        "Marca, modelo, año y color obligatorios",
+        "Kilometraje opcional; imagen de hasta 15 MB"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Resultado",
+      "items": [
+        "El vehículo queda activo y asociado al cliente",
+        "Todo ocurre en una transacción: sin registros a medias",
+        "Un cliente suspendido no recibe vehículos"
+      ]
+    }
+  ]
+}

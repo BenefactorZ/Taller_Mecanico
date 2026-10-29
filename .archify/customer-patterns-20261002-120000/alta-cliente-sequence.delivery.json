@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5447e7e9-6372-4e8b-a070-4674a070883c",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\alta-cliente-sequence.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\alta-cliente-sequence.html",
+  "specification": {
+    "sha256": "c4bdfb811bc7f665d6a10f06015616e0a6fc243a87166404e9d6887c03dcaa1d",
+    "bytes": 4717
+  },
+  "artifact": {
+    "sha256": "31f6a5cfb15f1e5e9325101dbaa950568f1c283963ec5b9eb3d4d30d81ed0c5c",
+    "bytes": 762014
+  }
+}

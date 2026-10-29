@@ -1,0 +1,285 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Alta de taller mecánico",
+    "output": ".archify/mapas-procesos-20261009-150000/alta-taller.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Persona"
+        },
+        "frontend": {
+          "label": "Pantalla Vue"
+        },
+        "security": {
+          "label": "Verificación de la API"
+        },
+        "database": {
+          "label": "Base de datos"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "admin",
+      "label": "Administrador"
+    },
+    {
+      "id": "vue",
+      "label": "Pantalla (Vue)"
+    },
+    {
+      "id": "api",
+      "label": "API (FastAPI)"
+    },
+    {
+      "id": "datos",
+      "label": "Persistencia"
+    }
+  ],
+  "phases": [
+    {
+      "id": "captura",
+      "label": "Captura",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "verificacion",
+      "label": "Verificación en la API",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "security"
+    },
+    {
+      "id": "guardado",
+      "label": "Guardado",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "adm",
+    "form",
+    "front",
+    "perm",
+    "back",
+    "dup",
+    "taller",
+    "exito"
+  ],
+  "nodes": [
+    {
+      "id": "adm",
+      "lane": "admin",
+      "col": 0,
+      "type": "external",
+      "label": "Administrador",
+      "sublabel": "único con talleres.alta",
+      "width": 152
+    },
+    {
+      "id": "form",
+      "lane": "vue",
+      "col": 1,
+      "type": "frontend",
+      "label": "Formulario de alta",
+      "sublabel": "datos, domicilio y foto",
+      "width": 152
+    },
+    {
+      "id": "front",
+      "lane": "vue",
+      "col": 2,
+      "type": "frontend",
+      "label": "Validación TypeScript",
+      "sublabel": "RFC, correo y foto ≤ 15 MB",
+      "width": 152
+    },
+    {
+      "id": "perm",
+      "lane": "api",
+      "col": 3,
+      "type": "security",
+      "label": "Requiere permiso",
+      "sublabel": "talleres.alta; otros: 403",
+      "width": 152
+    },
+    {
+      "id": "back",
+      "lane": "api",
+      "col": 4,
+      "type": "security",
+      "label": "Validación FastAPI",
+      "sublabel": "RFC, domicilio y foto",
+      "width": 152
+    },
+    {
+      "id": "dup",
+      "lane": "api",
+      "col": 5,
+      "type": "security",
+      "label": "¿Taller repetido?",
+      "sublabel": "nombre o RFC, con eliminados",
+      "width": 152
+    },
+    {
+      "id": "cat",
+      "lane": "datos",
+      "col": 2,
+      "type": "database",
+      "label": "codigos_postales",
+      "sublabel": "Correos de México",
+      "width": 152
+    },
+    {
+      "id": "audit",
+      "lane": "datos",
+      "col": 4,
+      "type": "database",
+      "label": "auditoria",
+      "sublabel": "ALTA_TALLER",
+      "width": 152
+    },
+    {
+      "id": "taller",
+      "lane": "datos",
+      "col": 5,
+      "type": "database",
+      "label": "talleres + foto",
+      "sublabel": "bin_status = activo",
+      "width": 152
+    },
+    {
+      "id": "error",
+      "lane": "vue",
+      "col": 4,
+      "type": "frontend",
+      "label": "Error junto al botón",
+      "sublabel": "403, 409, 413 o 422",
+      "width": 152
+    },
+    {
+      "id": "exito",
+      "lane": "vue",
+      "col": 5,
+      "type": "frontend",
+      "label": "Taller dado de alta",
+      "sublabel": "mensaje junto al botón",
+      "width": 152
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-adm",
+      "from": "adm",
+      "to": "form",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-form",
+      "from": "form",
+      "to": "front",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-cp",
+      "from": "front",
+      "to": "cat",
+      "label": "autollenado por CP",
+      "variant": "dashed",
+      "role": "async"
+    },
+    {
+      "id": "e-front",
+      "from": "front",
+      "to": "perm",
+      "label": "POST multipart",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-perm",
+      "from": "perm",
+      "to": "back",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-perm-err",
+      "from": "perm",
+      "to": "error",
+      "label": "403",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e-back-err",
+      "from": "back",
+      "to": "error",
+      "label": "422 / 413",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e-back",
+      "from": "back",
+      "to": "dup",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-dup-err",
+      "from": "dup",
+      "to": "error",
+      "label": "409",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e-dup",
+      "from": "dup",
+      "to": "taller",
+      "label": "único",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-audit",
+      "from": "taller",
+      "to": "audit",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-ok",
+      "from": "taller",
+      "to": "exito",
+      "variant": "emphasis",
+      "role": "return",
+      "fromSide": "right",
+      "toSide": "right",
+      "route": "outside-right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Reglas del alta",
+      "items": [
+        "Nombre y RFC únicos, sin distinguir mayúsculas",
+        "El RFC se valida con expresión regular y fecha real",
+        "La foto se identifica por sus bytes, no por la extensión"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Domicilio",
+      "items": [
+        "El código postal llena estado, municipio y colonia",
+        "Sin código postal, estado → municipio → colonia lo cargan",
+        "El servidor comprueba que los cuatro coincidan"
+      ]
+    }
+  ]
+}

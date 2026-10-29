@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "87db2f40-9a1a-4665-beea-e5a0a6814dd2",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\factory-method.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\factory-method.html",
+  "specification": {
+    "sha256": "46673e063d5a69228bfb0f88aa30c680d6805798362f72628df3d77c0e8abedd",
+    "bytes": 3388
+  },
+  "artifact": {
+    "sha256": "f5a577cda62ce9788eb21910dff785f10221fd612414a1f351750a38b6ac9d0e",
+    "bytes": 753152
+  }
+}

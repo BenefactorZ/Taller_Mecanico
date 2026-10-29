@@ -1,0 +1,201 @@
+{
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Customer · Facade",
+    "subtitle": "Diagrama de clases: AltaCliente() y ConsultarCliente() como único punto de entrada",
+    "output": ".archify/customer-patterns-20261002-120000/facade.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "usuario",
+      "type": "external",
+      "label": "Usuario",
+      "sublabel": "autenticado y autorizado",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "facade",
+      "type": "backend",
+      "label": "CustomerFacade",
+      "sublabel": "AltaCliente() · ConsultarCliente()",
+      "pos": [
+        320,
+        260
+      ],
+      "size": [
+        240,
+        80
+      ],
+      "tag": "Facade"
+    },
+    {
+      "id": "cadena",
+      "type": "security",
+      "label": "Cadena de alta",
+      "sublabel": "guardas, formato, coincidencias",
+      "pos": [
+        680,
+        60
+      ],
+      "size": [
+        240,
+        70
+      ]
+    },
+    {
+      "id": "politica",
+      "type": "backend",
+      "label": "PoliticaDuplicados",
+      "sublabel": "decidir(coincidencias)",
+      "pos": [
+        680,
+        170
+      ],
+      "size": [
+        240,
+        70
+      ]
+    },
+    {
+      "id": "creator",
+      "type": "backend",
+      "label": "CustomerCreator",
+      "sublabel": "crear()",
+      "pos": [
+        680,
+        280
+      ],
+      "size": [
+        240,
+        70
+      ]
+    },
+    {
+      "id": "busqueda",
+      "type": "backend",
+      "label": "EstrategiaBusqueda",
+      "sublabel": "buscar() paginado",
+      "pos": [
+        680,
+        390
+      ],
+      "size": [
+        240,
+        70
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "CustomerRepositorio",
+      "sublabel": "guardar() · obtener()",
+      "pos": [
+        320,
+        450
+      ],
+      "size": [
+        230,
+        70
+      ]
+    },
+    {
+      "id": "auditoria",
+      "type": "database",
+      "label": "Auditoría",
+      "sublabel": "registrar()",
+      "pos": [
+        40,
+        450
+      ],
+      "size": [
+        230,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "usuario",
+      "to": "facade",
+      "label": "solicita",
+      "variant": "emphasis"
+    },
+    {
+      "from": "facade",
+      "to": "cadena",
+      "label": "alta",
+      "variant": "security"
+    },
+    {
+      "from": "facade",
+      "to": "politica",
+      "label": "alta",
+      "variant": "default"
+    },
+    {
+      "from": "facade",
+      "to": "creator",
+      "label": "alta",
+      "variant": "default"
+    },
+    {
+      "from": "facade",
+      "to": "busqueda",
+      "label": "consulta",
+      "variant": "emphasis"
+    },
+    {
+      "from": "busqueda",
+      "to": "repo",
+      "label": "consulta",
+      "variant": "dashed"
+    },
+    {
+      "from": "facade",
+      "to": "repo",
+      "label": "persiste",
+      "variant": "emphasis"
+    },
+    {
+      "from": "facade",
+      "to": "auditoria",
+      "label": "audita",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Interfaz",
+      "items": [
+        "El llamador sólo conoce AltaCliente(), ConsultarCliente() y obtener_ficha().",
+        "Normalización, paginación, persistencia y auditoría quedan ocultas."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Seguridad",
+      "items": [
+        "Las guardas se ejecutan dentro de la Facade antes de cualquier lectura o escritura.",
+        "Ningún llamador puede saltarse la cadena."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Coordinación",
+      "items": [
+        "La Facade no contiene reglas: orquesta cadena, política, fábrica, repositorio y auditoría.",
+        "Se puede sustituir cada pieza sin cambiar la interfaz."
+      ]
+    }
+  ],
+  "schema_version": 1
+}

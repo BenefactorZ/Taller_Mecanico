@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0a750c9e-827f-46ca-abae-e7da7cb53f60",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\plan-trabajo.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\mapas-procesos-20261009-150000\\plan-trabajo.html",
+  "specification": {
+    "sha256": "07543a773a43abd6aa2e12adaedc99a95f95157010227c610013de8661e8c97a",
+    "bytes": 5500
+  },
+  "artifact": {
+    "sha256": "5d41ddfe5e142a54a218f77e576d2ef3f245dde13037eb6133c05e89f9d43ac0",
+    "bytes": 763808
+  }
+}

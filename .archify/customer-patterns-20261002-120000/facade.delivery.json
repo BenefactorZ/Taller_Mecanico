@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "629a8962-9b15-40ca-b346-ea5c06a8bf34",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\facade.json",
+  "output": "C:\\Taller_Mecanico\\.archify\\customer-patterns-20261002-120000\\facade.html",
+  "specification": {
+    "sha256": "d10bdf8f246fa7be8840cb35c092d5d23d1dee690f45992448fbbf385f07bfb2",
+    "bytes": 4139
+  },
+  "artifact": {
+    "sha256": "db6b6ab59273c3ccf7560b1b886da628ee30acf3a2d7f297ac42c23413a90146",
+    "bytes": 759289
+  }
+}

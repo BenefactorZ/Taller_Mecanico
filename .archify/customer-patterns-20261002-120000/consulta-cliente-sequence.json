@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "title": "Consulta de Customer",
+    "subtitle": "Guardas, criterio normalizado, búsqueda paginada, coincidencias y ficha",
+    "output": ".archify/customer-patterns-20261002-120000/consulta-cliente-sequence.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "u",
+      "type": "external",
+      "label": "Usuario",
+      "sublabel": "sesión"
+    },
+    {
+      "id": "f",
+      "type": "backend",
+      "label": "Facade",
+      "sublabel": "alta/consulta"
+    },
+    {
+      "id": "c",
+      "type": "security",
+      "label": "Guardas",
+      "sublabel": "cadena"
+    },
+    {
+      "id": "s",
+      "type": "backend",
+      "label": "Búsqueda",
+      "sublabel": "Strategy"
+    },
+    {
+      "id": "cu",
+      "type": "database",
+      "label": "Customer",
+      "sublabel": "repositorio"
+    }
+  ],
+  "segments": [
+    {
+      "from": 180,
+      "to": 310,
+      "label": "Guardas"
+    },
+    {
+      "from": 330,
+      "to": 560,
+      "label": "Búsqueda paginada"
+    },
+    {
+      "from": 580,
+      "to": 800,
+      "label": "Ficha"
+    }
+  ],
+  "messages": [
+    {
+      "from": "u",
+      "to": "f",
+      "y": 200,
+      "label": "ConsultarCliente(criterio)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "f",
+      "to": "c",
+      "y": 245,
+      "label": "autenticación, autorización y Taller activo",
+      "variant": "security"
+    },
+    {
+      "from": "c",
+      "to": "f",
+      "y": 285,
+      "label": "guardas aprobadas",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "s",
+      "y": 350,
+      "label": "normalizar criterio y elegir variante",
+      "variant": "emphasis"
+    },
+    {
+      "from": "s",
+      "to": "cu",
+      "y": 395,
+      "label": "buscar coincidencias paginadas",
+      "variant": "default"
+    },
+    {
+      "from": "cu",
+      "to": "s",
+      "y": 440,
+      "label": "coincidencias y total",
+      "variant": "return"
+    },
+    {
+      "from": "s",
+      "to": "f",
+      "y": 480,
+      "label": "página de resultados",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "u",
+      "y": 525,
+      "label": "mostrar coincidencias",
+      "variant": "return",
+      "note": "Sin coincidencias: página vacía"
+    },
+    {
+      "from": "u",
+      "to": "f",
+      "y": 600,
+      "label": "seleccionar un Customer",
+      "variant": "emphasis"
+    },
+    {
+      "from": "f",
+      "to": "c",
+      "y": 645,
+      "label": "guardas y obtener_ficha(id)",
+      "variant": "security"
+    },
+    {
+      "from": "f",
+      "to": "cu",
+      "y": 695,
+      "label": "obtener(taller, id)",
+      "variant": "default"
+    },
+    {
+      "from": "cu",
+      "to": "f",
+      "y": 740,
+      "label": "Customer activo",
+      "variant": "return"
+    },
+    {
+      "from": "f",
+      "to": "u",
+      "y": 780,
+      "label": "ficha del Customer",
+      "variant": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Guarda",
+      "items": [
+        "La consulta exige las mismas guardas que el alta.",
+        "Un Taller inactivo no expone resultados."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Búsqueda paginada",
+      "items": [
+        "Strategy elige búsqueda por contacto o por nombre.",
+        "Devuelve página, tamaño y total; no crea registros."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ficha",
+      "items": [
+        "Seleccionar una coincidencia abre la ficha del Customer.",
+        "La ficha sólo se obtiene dentro del Taller de la sesión."
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "diagram_type": "sequence"
+}

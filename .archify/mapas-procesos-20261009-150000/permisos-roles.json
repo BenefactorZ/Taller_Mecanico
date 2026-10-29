@@ -1,0 +1,239 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Cómo se decide un permiso en cada petición",
+    "output": ".archify/mapas-procesos-20261009-150000/permisos-roles.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "Cliente HTTP"
+        },
+        "security": {
+          "label": "Guarda de permisos"
+        },
+        "backend": {
+          "label": "Permisos en el código"
+        },
+        "database": {
+          "label": "Permisos en la base"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "navegador",
+      "label": "Navegador"
+    },
+    {
+      "id": "api",
+      "label": "API (requiere)"
+    },
+    {
+      "id": "fabrica",
+      "label": "Roles de fábrica"
+    },
+    {
+      "id": "custom",
+      "label": "Roles personalizados"
+    }
+  ],
+  "phases": [
+    {
+      "id": "entrada",
+      "label": "Entrada",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "consulta",
+      "label": "Permisos del rol",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "salida",
+      "label": "Decisión",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "peticion",
+    "sesion",
+    "gate",
+    "fab",
+    "dec",
+    "ok"
+  ],
+  "nodes": [
+    {
+      "id": "peticion",
+      "lane": "navegador",
+      "col": 0,
+      "type": "external",
+      "label": "Petición con token",
+      "sublabel": "endpoint protegido",
+      "width": 158
+    },
+    {
+      "id": "sesion",
+      "lane": "api",
+      "col": 1,
+      "type": "security",
+      "label": "Sesión válida",
+      "sublabel": "JWT y cuenta activa",
+      "width": 158
+    },
+    {
+      "id": "gate",
+      "lane": "api",
+      "col": 2,
+      "type": "security",
+      "label": "requiere(permiso)",
+      "sublabel": "p. ej. clientes.alta",
+      "tag": "se lee de la base",
+      "width": 158
+    },
+    {
+      "id": "dec",
+      "lane": "api",
+      "col": 4,
+      "type": "security",
+      "label": "¿Incluye el permiso?",
+      "sublabel": "conjunto efectivo del rol",
+      "width": 158
+    },
+    {
+      "id": "ok",
+      "lane": "api",
+      "col": 5,
+      "type": "backend",
+      "label": "Se atiende",
+      "sublabel": "la petición, al instante",
+      "width": 158
+    },
+    {
+      "id": "deny",
+      "lane": "navegador",
+      "col": 5,
+      "type": "external",
+      "label": "403 sin permiso",
+      "sublabel": "sin volver a ingresar",
+      "width": 158
+    },
+    {
+      "id": "fab",
+      "lane": "fabrica",
+      "col": 3,
+      "type": "backend",
+      "label": "Permisos fijos",
+      "sublabel": "en el código",
+      "width": 158
+    },
+    {
+      "id": "cust",
+      "lane": "custom",
+      "col": 3,
+      "type": "database",
+      "label": "roles_permisos",
+      "sublabel": "los asigna el administrador",
+      "tag": "rol eliminado = ninguno",
+      "width": 158
+    },
+    {
+      "id": "filtro",
+      "lane": "custom",
+      "col": 4,
+      "type": "security",
+      "label": "Filtro de reservados",
+      "sublabel": "nunca se conceden",
+      "width": 158
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-peticion",
+      "from": "peticion",
+      "to": "sesion",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-sesion",
+      "from": "sesion",
+      "to": "gate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-fabrica",
+      "from": "gate",
+      "to": "fab",
+      "label": "rol de fábrica",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-custom",
+      "from": "gate",
+      "to": "cust",
+      "label": "rol personalizado",
+      "role": "branch"
+    },
+    {
+      "id": "e-filtro",
+      "from": "cust",
+      "to": "filtro",
+      "variant": "security"
+    },
+    {
+      "id": "e-fab-dec",
+      "from": "fab",
+      "to": "dec",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-filtro-dec",
+      "from": "filtro",
+      "to": "dec",
+      "role": "branch"
+    },
+    {
+      "id": "e-ok",
+      "from": "dec",
+      "to": "ok",
+      "label": "sí",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-deny",
+      "from": "dec",
+      "to": "deny",
+      "label": "no",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "No delegables",
+      "items": [
+        "empleados.*, roles.administrar y talleres.* son sólo del administrador",
+        "clientes.administrar, clientes.suspender y vehiculos.* son de roles de fábrica",
+        "Aunque se escriban en la base, nunca se conceden"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Reglas",
+      "items": [
+        "17 permisos; 9 de ellos no son delegables",
+        "Un cambio surte efecto al instante: se lee en cada petición",
+        "El menú y las rutas sólo reflejan lo que la API decide"
+      ]
+    }
+  ]
+}
