@@ -71,7 +71,7 @@ def _salida(db: Session, filas: list[VehiculoModel]) -> list[VehiculoOut]:
     talleres = dict(db.execute(select(TallerModel.id, TallerModel.nombre).where(TallerModel.id.in_({v.taller_id for v in filas}))).all())
     return [VehiculoOut(id=v.id, customer_id=v.customer_id, cliente=clientes.get(v.customer_id, ""), taller_id=v.taller_id, taller=talleres.get(v.taller_id, ""),
                         vin=v.vin, placa=v.placa, marca=v.marca, modelo=v.modelo, anio=v.anio, color=v.color, kilometraje=v.kilometraje,
-                        tiene_foto=bool(v.foto), estado="ACTIVO" if v.bin_status == STATUS_ACTIVO else "ELIMINADO", created_at=v.created_at) for v in filas]
+                        tiene_foto=bool(v.foto), estado="ACTIVO" if v.bin_status == STATUS_ACTIVO else "SUSPENDIDO", created_at=v.created_at) for v in filas]
 
 
 # ---------- pasos del flujo de registro ----------
@@ -166,13 +166,13 @@ def registrar_vehiculo(
 
 @router.get("", response_model=PaginaVehiculos)
 def listar_vehiculos(
-    buscar: str = Query("", max_length=100), customer_id: int | None = Query(None, ge=1), estado: str = Query("ACTIVO", pattern=r"^(ACTIVO|ELIMINADO)$"),
+    buscar: str = Query("", max_length=100), customer_id: int | None = Query(None, ge=1), estado: str = Query("ACTIVO", pattern=r"^(ACTIVO|SUSPENDIDO)$"),
     pagina: int = Query(1, ge=1), tamano: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db), usuario: User = Depends(puede_consultar),
 ):
     """Vehículos con búsqueda (placa, VIN, marca, modelo o nombre del cliente). Cada persona ve los de su taller; el administrador, todos.
 
-    Por omisión sólo los activos; con `estado=ELIMINADO` se listan los dados de baja para poder restaurarlos.
+    Por omisión sólo los activos; con `estado=SUSPENDIDO` se listan los suspendidos para poder activarlos.
     """
     limite = alcance_de(db, usuario)
     consulta = select(VehiculoModel).join(CustomerModel, CustomerModel.id == VehiculoModel.customer_id).where(VehiculoModel.bin_status == (STATUS_ACTIVO if estado == "ACTIVO" else STATUS_ELIMINADO))
@@ -193,10 +193,10 @@ def listar_vehiculos(
     return PaginaVehiculos(items=_salida(db, filas), total=total, pagina=pagina, tamano=tamano)
 
 
-# ---------- consulta, modificación, baja lógica y restauración ----------
+# ---------- consulta, modificación, suspensión lógica y activación ----------
 
-CAMPOS = ("vin", "placa", "marca", "modelo", "anio", "color", "kilometraje")
-ETIQUETAS = {"vin": "VIN", "placa": "placa", "marca": "marca", "modelo": "modelo", "anio": "año", "color": "color", "kilometraje": "kilometraje"}
+CAMPOS = ("placa", "marca", "modelo", "anio", "color", "kilometraje")
+ETIQUETAS = {"placa": "placa", "marca": "marca", "modelo": "modelo", "anio": "año", "color": "color", "kilometraje": "kilometraje"}
 
 
 def vehiculo_en_alcance(db: Session, usuario: User, vehiculo_id: int) -> VehiculoModel:
@@ -224,20 +224,20 @@ def obtener_vehiculo(vehiculo_id: int, db: Session = Depends(get_db), usuario: U
 @router.put("/{vehiculo_id}", response_model=VehiculoOut)
 def modificar_vehiculo(
     vehiculo_id: int, request: Request,
-    vin: str = Form(""), placa: str = Form(""), marca: str = Form(""), modelo: str = Form(""), anio: str = Form(""), color: str = Form(""), kilometraje: str = Form(""),
+    placa: str = Form(""), marca: str = Form(""), modelo: str = Form(""), anio: str = Form(""), color: str = Form(""), kilometraje: str = Form(""),
     foto: UploadFile | None = File(None),
     db: Session = Depends(get_db), usuario: User = Depends(puede_registrar),
 ):
-    """Modifica los datos de un vehículo activo (la imagen es opcional: si no se envía se conserva). El cliente y el taller no cambian."""
+    """Modifica los datos editables de un vehículo activo. VIN, cliente y taller no cambian; la imagen se conserva si no se reemplaza."""
     if int(request.headers.get("content-length") or 0) > FOTO_MAX_BYTES + 512 * 1024:
         raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "La imagen supera el máximo de 15 MB")
     vehiculo = vehiculo_en_alcance(db, usuario, vehiculo_id)
     if vehiculo.bin_status != STATUS_ACTIVO:
-        raise ReglaIncumplida("ESTADO_INVALIDO", "El vehículo está eliminado; restáurelo para poder modificarlo")
-    datos = _normalizar(vin=vin, placa=placa, marca=marca, modelo=modelo, anio=anio, color=color, kilometraje=kilometraje)
-    # duplicados: el VIN y la placa no pueden ser de otro vehículo (eliminados incluidos, porque siguen ocupando el valor)
-    if db.scalar(select(VehiculoModel.id).where(VehiculoModel.vin == datos.vin, VehiculoModel.id != vehiculo.id)):
-        raise HTTPException(status.HTTP_409_CONFLICT, "Ya existe un vehículo registrado con ese VIN")
+        raise ReglaIncumplida("ESTADO_INVALIDO", "El vehículo está suspendido; actívelo para poder modificarlo")
+    datos = _normalizar(vin=vehiculo.vin, placa=placa, marca=marca, modelo=modelo, anio=anio, color=color, kilometraje=kilometraje)
+    if datos.kilometraje is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "kilometraje: es obligatorio para modificar el vehículo")
+    # La placa no puede pertenecer a otro vehículo, incluso eliminado. El VIN no se recibe ni se modifica.
     if db.scalar(select(VehiculoModel.id).where(VehiculoModel.placa == datos.placa, VehiculoModel.id != vehiculo.id)):
         raise HTTPException(status.HTTP_409_CONFLICT, "Ya existe un vehículo registrado con esa placa")
     nueva: Path | None = None
@@ -273,29 +273,29 @@ def modificar_vehiculo(
     return _salida(db, [vehiculo])[0]
 
 
-@router.delete("/{vehiculo_id}", response_model=VehiculoOut)
-def eliminar_vehiculo(vehiculo_id: int, db: Session = Depends(get_db), usuario: User = Depends(puede_registrar)):
-    """Borrado lógico: el vehículo deja de listarse pero se conserva (y puede restaurarse). La imagen no se borra."""
+@router.post("/{vehiculo_id}/suspender", response_model=VehiculoOut)
+def suspender_vehiculo(vehiculo_id: int, db: Session = Depends(get_db), usuario: User = Depends(puede_registrar)):
+    """Suspensión lógica: conserva el vehículo y su imagen, pero lo oculta de los activos."""
     vehiculo = vehiculo_en_alcance(db, usuario, vehiculo_id)
     if vehiculo.bin_status != STATUS_ACTIVO:
-        raise ReglaIncumplida("ESTADO_INVALIDO", "El vehículo ya está eliminado")
+        raise ReglaIncumplida("ESTADO_INVALIDO", "El vehículo ya está suspendido")
     vehiculo.bin_status = STATUS_ELIMINADO
-    _auditar(db, "ELIMINAR_VEHICULO", usuario, vehiculo, f"Vehículo #{vehiculo.id}: {vehiculo.marca} {vehiculo.modelo}, placa {vehiculo.placa}")
+    _auditar(db, "SUSPENDER_VEHICULO", usuario, vehiculo, f"Vehículo #{vehiculo.id}: {vehiculo.marca} {vehiculo.modelo}, placa {vehiculo.placa}")
     db.commit()
     db.refresh(vehiculo)
     return _salida(db, [vehiculo])[0]
 
 
-@router.post("/{vehiculo_id}/restaurar", response_model=VehiculoOut)
-def restaurar_vehiculo(vehiculo_id: int, db: Session = Depends(get_db), usuario: User = Depends(puede_registrar)):
+@router.post("/{vehiculo_id}/activar", response_model=VehiculoOut)
+def activar_vehiculo(vehiculo_id: int, db: Session = Depends(get_db), usuario: User = Depends(puede_registrar)):
     vehiculo = vehiculo_en_alcance(db, usuario, vehiculo_id)
     if vehiculo.bin_status == STATUS_ACTIVO:
         raise ReglaIncumplida("ESTADO_INVALIDO", "El vehículo ya está activo")
     dueno = db.get(CustomerModel, vehiculo.customer_id)
     if dueno is None or dueno.estado is EstadoCustomer.INACTIVO:
-        raise ReglaIncumplida("CLIENTE_SUSPENDIDO", "El cliente está suspendido; reactívelo antes de restaurar su vehículo")
+        raise ReglaIncumplida("CLIENTE_SUSPENDIDO", "El cliente está suspendido; reactívelo antes de activar su vehículo")
     vehiculo.bin_status = STATUS_ACTIVO
-    _auditar(db, "RESTAURAR_VEHICULO", usuario, vehiculo, f"Vehículo #{vehiculo.id}: {vehiculo.marca} {vehiculo.modelo}, placa {vehiculo.placa}")
+    _auditar(db, "ACTIVAR_VEHICULO", usuario, vehiculo, f"Vehículo #{vehiculo.id}: {vehiculo.marca} {vehiculo.modelo}, placa {vehiculo.placa}")
     db.commit()
     db.refresh(vehiculo)
     return _salida(db, [vehiculo])[0]

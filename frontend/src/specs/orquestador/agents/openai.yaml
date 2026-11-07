@@ -1,0 +1,6 @@
+interface:
+  display_name: "Orquestador"
+  short_description: "Coordina cambios del proyecto"
+  default_prompt: "Usa $orquestador para analizar y ejecutar este cambio del proyecto."
+policy:
+  allow_implicit_invocation: false

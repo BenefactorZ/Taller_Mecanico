@@ -1,6 +1,6 @@
 # Fase 7 · Registrar vehículos
 
-**Objetivo.** Un módulo para registrar vehículos, que sólo usan el recepcionista y el administrador, y en el que cada vehículo queda **asociado a un cliente**. Estado: ✅ hecho y probado.
+**Objetivo.** Un módulo para registrar y actualizar vehículos, que sólo usan el recepcionista y el administrador, y en el que cada vehículo queda **asociado a un cliente**. Estado: ✅ hecho y probado.
 
 ## Mapa del proceso
 
@@ -46,7 +46,7 @@ Las expresiones regulares y las demás reglas están en `backend/app/vehiculos/v
 | Alcance | La recepcionista registra y ve los vehículos de **su taller**; el administrador, los de **todos** |
 | Menú | **Vehículos** → Vehículos y Registrar vehículo; también hay un atajo desde «Administrar clientes» con el cliente ya elegido |
 | `/vehiculos/nuevo` | Formulario: selector de cliente con búsqueda, datos del vehículo e imagen con arrastrar y soltar. El éxito o el error aparecen **junto al botón** |
-| `/vehiculos` | Lista con miniatura, marca, modelo, año, placa, VIN, color, kilometraje, cliente y (administrador) taller; búsqueda por placa, VIN, marca, modelo o cliente |
+| `/vehiculos` | Lista con miniatura, marca, modelo, año, placa, VIN, color, kilometraje, cliente y (administrador) taller; búsqueda por placa, VIN, marca, modelo o cliente. La acción **Modificar** abre un modal: conserva VIN, cliente, taller e imagen actual, y exige todos los datos editables, incluido kilometraje. Recepcionista y administrador pueden **suspender** un vehículo sin borrarlo y **activarlo** de nuevo; ambos cambios requieren confirmación en un modal. |
 
 ## 4. API
 
@@ -54,6 +54,9 @@ Las expresiones regulares y las demás reglas están en `backend/app/vehiculos/v
 | --- | --- | --- | --- |
 | POST | `/api/vehiculos` | `vehiculos.registrar` | `multipart/form-data`: `customer_id`, `vin`, `placa`, `marca`, `modelo`, `anio`, `color`, `kilometraje` (opcional) y `foto`. Responde `201` con el vehículo `ACTIVO` |
 | GET | `/api/vehiculos?buscar=&customer_id=&pagina=&tamano=` | `vehiculos.consultar` | Búsqueda y paginación dentro del alcance |
+| PUT | `/api/vehiculos/{id}` | `vehiculos.registrar` | Actualiza placa, marca, modelo, año, color y kilometraje; todos son obligatorios. Conserva VIN, cliente, taller y foto si no se envía una imagen nueva. Normaliza, detecta duplicados y audita la modificación. |
+| POST | `/api/vehiculos/{id}/suspender` | `vehiculos.registrar` | Suspende de forma lógica: conserva el registro, la imagen y la relación con el cliente; registra la acción en auditoría. |
+| POST | `/api/vehiculos/{id}/activar` | `vehiculos.registrar` | Reactiva el vehículo si su cliente está activo; registra la acción en auditoría. |
 | GET | `/api/vehiculos/{id}/foto` | `vehiculos.consultar` | Imagen, con la sesión (el navegador la descarga con el token) |
 
 ## 5. Datos
@@ -69,11 +72,13 @@ Tabla nueva **`vehiculos`** (no modifica las existentes; la crea `create_all` al
 - [x] El resultado es un vehículo **activo** (`bin_status = 1`).
 - [x] Un rechazo no deja imágenes huérfanas ni registros a medias.
 - [x] Validaciones en TypeScript y en FastAPI.
+- [x] Recepcionista y administrador pueden modificar desde un modal los datos editables de un vehículo activo de su alcance; VIN, cliente y taller quedan bloqueados, todos los campos editables son obligatorios, se evita duplicar placa y el cambio queda auditado.
+- [x] Recepcionista y administrador suspenden o activan vehículos de su alcance sin borrarlos; ambas acciones piden confirmación, quedan auditadas y no permiten activar un vehículo cuyo cliente esté suspendido.
 
 Pruebas: `backend/tests/e2e_clientes_vehiculos.py`.
 
 ## 7. Pendientes
 
-- Editar, eliminar (borrado lógico) y restaurar vehículos, y transferirlos de cliente.
+- Transferir un vehículo de cliente.
 - Que las órdenes de trabajo y la recepción de vehículos usen este registro.
 - Consultar los vehículos desde la ficha del cliente.

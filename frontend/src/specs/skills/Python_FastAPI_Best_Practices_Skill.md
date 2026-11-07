@@ -1,4 +1,11 @@
-# Python_FastAPI_Best_Practices_Skill.md
+---
+name: Python FastAPI Best Practices
+description: Guía técnica para diseñar, implementar y validar servicios con FastAPI y Python.
+version: 1.0.0
+language: es
+---
+
+# Guía de buenas prácticas para Python y FastAPI
 
 ## Objetivo
 Garantizar desarrollo de módulos FastAPI escalables, mantenibles, seguros y eficientes.

@@ -193,14 +193,14 @@ with TestClient(app) as c:
     with Session(engine) as db:
         esperar("auditoría: una fila por vehículo", len(db.scalars(select(AuditoriaModel).where(AuditoriaModel.accion == "ALTA_VEHICULO")).all()), 3)
 
-    # ---------- modificar, eliminar y restaurar vehículos ----------
+    # ---------- modificar, suspender y activar vehículos ----------
     def editar(cab, vid, cambios=None, foto=None):
-        datos = {"vin": "1HGCM82633A004352", "placa": "ABC-123-D", "marca": "Honda", "modelo": "Civic", "anio": "2019", "color": "Rojo", "kilometraje": "45000", **(cambios or {})}
+        datos = {"placa": "ABC-123-D", "marca": "Honda", "modelo": "Civic", "anio": "2019", "color": "Rojo", "kilometraje": "45000", **(cambios or {})}
         return c.put(f"{V}/{vid}", headers=cab, data=datos, files={"foto": foto} if foto else None)
     v2 = c.get(f"{V}?buscar=1AB234", headers=rita).json()["items"][0]["id"]
     for etiqueta, cab in (("asesor", ana), ("técnico", tomas)):
-        esperar(f"{etiqueta} no modifica ni elimina -> 403", (editar(cab, v1["id"]).status_code, c.delete(f"{V}/{v1['id']}", headers=cab).status_code), (403, 403))
-    esperar("otro taller no ve, modifica ni elimina (404)", (c.get(f"{V}/{v1['id']}", headers=nora).status_code, editar(nora, v1["id"]).status_code, c.delete(f"{V}/{v1['id']}", headers=nora).status_code), (404, 404, 404))
+        esperar(f"{etiqueta} no modifica ni suspende -> 403", (editar(cab, v1["id"]).status_code, c.post(f"{V}/{v1['id']}/suspender", headers=cab).status_code), (403, 403))
+    esperar("otro taller no ve, modifica ni suspende (404)", (c.get(f"{V}/{v1['id']}", headers=nora).status_code, editar(nora, v1["id"]).status_code, c.post(f"{V}/{v1['id']}/suspender", headers=nora).status_code), (404, 404, 404))
     esperar("consultar uno", (c.get(f"{V}/{v1['id']}", headers=rita).json()["placa"], c.get(f"{V}/9999", headers=rita).status_code), ("ABC123D", 404))
     r = editar(rita, v1["id"], {"kilometraje": "50000", "color": "azul"})
     esperar("modificar kilometraje y color", (r.status_code, r.json().get("kilometraje"), r.json().get("color"), r.json().get("customer_id")), (200, 50000, "Azul", maria))
@@ -209,38 +209,41 @@ with TestClient(app) as c:
     n = len(h)
     editar(rita, v1["id"], {"kilometraje": "50000", "color": "Azul"})
     esperar("guardar sin cambios no genera movimiento", len(c.get(f"{ADM}/{maria}/historial", headers=rita).json()), n)
-    esperar("conservar los mismos VIN y placa no es duplicado", editar(rita, v1["id"], {"kilometraje": "50000", "color": "Azul"}).status_code, 200)
-    esperar("VIN de otro vehículo -> 409", editar(rita, v1["id"], {"vin": "JH4KA8260MC000000"}).status_code, 409)
+    esperar("conservar la misma placa no es duplicado", editar(rita, v1["id"], {"kilometraje": "50000", "color": "Azul"}).status_code, 200)
+    r = editar(rita, v1["id"], {"vin": "JH4KA8260MC000000", "kilometraje": "50000", "color": "Azul"})
+    esperar("un VIN enviado manualmente se ignora y no cambia", (r.status_code, r.json().get("vin")), (200, "1HGCM82633A004352"))
     esperar("placa de otro vehículo -> 409", editar(rita, v1["id"], {"placa": "1ab 234"}).status_code, 409)
-    esperar("datos inválidos -> 422", (editar(rita, v1["id"], {"vin": "123"}).status_code, editar(rita, v1["id"], {"anio": "1900"}).status_code), (422, 422))
+    esperar("datos inválidos o kilometraje vacío -> 422", (editar(rita, v1["id"], {"placa": "123"}).status_code, editar(rita, v1["id"], {"anio": "1900"}).status_code, editar(rita, v1["id"], {"kilometraje": ""}).status_code), (422, 422, 422))
     antes = archivos()
     r = editar(rita, v1["id"], {"kilometraje": "50000", "color": "Azul"}, foto=("n.png", PNG, "image/png"))
     esperar("cambiar la imagen reemplaza el archivo anterior", (r.status_code, len(archivos()), set(archivos()) != set(antes), c.get(f"{V}/{v1['id']}/foto", headers=rita).headers["content-type"]), (200, 3, True, "image/png"))
     esperar("imagen inválida al modificar -> 422 y no deja archivos", (editar(rita, v1["id"], foto=("a.gif", GIF, "image/gif")).status_code, len(archivos())), (422, 3))
     esperar("imagen de más de 15 MB al modificar -> 413", editar(rita, v1["id"], foto=("g.jpg", JPG + b"0" * (15 * 1024 * 1024), "image/jpeg")).status_code, 413)
-    # baja lógica
-    r = c.delete(f"{V}/{v2}", headers=rita)
-    esperar("eliminar es lógico (estado ELIMINADO)", (r.status_code, r.json().get("estado")), (200, "ELIMINADO"))
+    r = editar(admin, v1["id"], {"marca": "Toyota"})
+    esperar("administrador modifica un vehículo", (r.status_code, r.json().get("marca")), (200, "Toyota"))
+    # suspensión lógica
+    r = c.post(f"{V}/{v2}/suspender", headers=rita)
+    esperar("suspender es lógico (estado SUSPENDIDO)", (r.status_code, r.json().get("estado")), (200, "SUSPENDIDO"))
     with Session(engine) as db:
         esperar("sigue en la base con bin_status 2 y su imagen", (db.get(VehiculoModel, v2).bin_status, len(archivos())), (2, 3))
     esperar("ya no aparece en el listado activo ni en el conteo del cliente", ([x["id"] for x in c.get(V, headers=rita).json()["items"]], {x["id"]: x["vehiculos"] for x in c.get(ADM, headers=rita).json()["items"]}[maria]), ([v1["id"]], 1))
-    esperar("aparece al listar eliminados", [x["id"] for x in c.get(f"{V}?estado=ELIMINADO", headers=rita).json()["items"]], [v2])
-    esperar("eliminar de nuevo o modificar uno eliminado -> 409", (c.delete(f"{V}/{v2}", headers=rita).status_code, editar(rita, v2, {"vin": "JH4KA8260MC000000", "placa": "1AB234"}).status_code), (409, 409))
-    esperar("el VIN de un eliminado sigue ocupado -> 409", alta(rita, {"vin": "JH4KA8260MC000000", "placa": "NEW-123"}).status_code, 409)
+    esperar("aparece al listar suspendidos", [x["id"] for x in c.get(f"{V}?estado=SUSPENDIDO", headers=rita).json()["items"]], [v2])
+    esperar("suspender de nuevo o modificar uno suspendido -> 409", (c.post(f"{V}/{v2}/suspender", headers=rita).status_code, editar(rita, v2, {"placa": "1AB234"}).status_code), (409, 409))
+    esperar("el VIN de un suspendido sigue ocupado -> 409", alta(rita, {"vin": "JH4KA8260MC000000", "placa": "NEW-123"}).status_code, 409)
     h = c.get(f"{ADM}/{maria}/historial", headers=rita).json()
-    esperar("la baja queda en el historial", h[0]["accion"], "ELIMINAR_VEHICULO")
-    # restauración
-    esperar("otro taller no restaura (404)", c.post(f"{V}/{v2}/restaurar", headers=nora).status_code, 404)
+    esperar("la suspensión queda en el historial", h[0]["accion"], "SUSPENDER_VEHICULO")
+    # activación
+    esperar("otro taller no activa (404)", c.post(f"{V}/{v2}/activar", headers=nora).status_code, 404)
     c.post(f"{ADM}/{maria}/suspender", headers=admin, json={"motivo": "Prueba de restauracion"})
-    r = c.post(f"{V}/{v2}/restaurar", headers=rita)
-    esperar("con el cliente suspendido no se restaura -> 409", (r.status_code, r.json().get("codigo")), (409, "CLIENTE_SUSPENDIDO"))
+    r = c.post(f"{V}/{v2}/activar", headers=rita)
+    esperar("con el cliente suspendido no se activa -> 409", (r.status_code, r.json().get("codigo")), (409, "CLIENTE_SUSPENDIDO"))
     c.post(f"{ADM}/{maria}/reactivar", headers=admin)
-    r = c.post(f"{V}/{v2}/restaurar", headers=rita)
-    esperar("restaurar deja el vehículo activo", (r.status_code, r.json().get("estado")), (200, "ACTIVO"))
-    esperar("restaurar uno activo -> 409", c.post(f"{V}/{v2}/restaurar", headers=rita).status_code, 409)
-    esperar("tras restaurar vuelve al listado y al conteo", (c.get(V, headers=rita).json()["total"], {x["id"]: x["vehiculos"] for x in c.get(ADM, headers=rita).json()["items"]}[maria]), (2, 2))
+    r = c.post(f"{V}/{v2}/activar", headers=rita)
+    esperar("activar deja el vehículo activo", (r.status_code, r.json().get("estado")), (200, "ACTIVO"))
+    esperar("activar uno activo -> 409", c.post(f"{V}/{v2}/activar", headers=rita).status_code, 409)
+    esperar("tras activar vuelve al listado y al conteo", (c.get(V, headers=rita).json()["total"], {x["id"]: x["vehiculos"] for x in c.get(ADM, headers=rita).json()["items"]}[maria]), (2, 2))
     with Session(engine) as db:
-        esperar("auditoría de modificación, baja y restauración", [len(db.scalars(select(AuditoriaModel).where(AuditoriaModel.accion == a)).all()) for a in ("ACTUALIZAR_VEHICULO", "ELIMINAR_VEHICULO", "RESTAURAR_VEHICULO")], [2, 1, 1])
+        esperar("auditoría de modificación, suspensión y activación", [len(db.scalars(select(AuditoriaModel).where(AuditoriaModel.accion == a)).all()) for a in ("ACTUALIZAR_VEHICULO", "SUSPENDER_VEHICULO", "ACTIVAR_VEHICULO")], [3, 1, 1])
 
 print("\nFALLARON:" if fallos else "\nRESULTADO: TODO OK", fallos if fallos else "")
 sys.exit(1 if fallos else 0)
